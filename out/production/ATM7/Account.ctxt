@@ -1,0 +1,19 @@
+#BlueJ class context
+comment0.target=Account
+comment0.text=\r\n\ The\ Account\ class\ holds\ information\ about\ and\ manipulates\ the\ account\ at\ the\ bank\r\n\r\n\ @author\ Kwinn\ Danforth\r\n\ @version\ 1.0.01\r\n
+comment1.params=type
+comment1.target=Account(java.lang.String)
+comment1.text=\r\n\ Constructor\ for\ objects\ of\ class\ Account\r\n
+comment2.params=
+comment2.target=java.lang.String\ getType()
+comment2.text=\r\n\ This\ method\ returns\ the\ type\ of\ the\ account\r\n\r\n\ @return\ The\ type\ of\ the\ account\r\n
+comment3.params=
+comment3.target=double\ getBalance()
+comment3.text=\r\n\ This\ method\ returns\ the\ balence\ of\ the\ account\r\n\r\n\ @return\ The\ balence\ of\ the\ account\r\n
+comment4.params=ammount
+comment4.target=void\ deposit(double)
+comment4.text=\r\n\ This\ method\ deposits\ money\ into\ the\ account.\ Adds\ the\ ammount\ to\ the\ balence.\r\n\r\n\ @param\ The\ ammount\ to\ add\ to\ the\ balence\r\n
+comment5.params=ammount
+comment5.target=void\ withdraw(double)
+comment5.text=\r\n\ This\ method\ withdraws\ money\ out\ of\ the\ account.\ Subtracts\ the\ ammount\ from\ the\ balence.\r\n\r\n\ @param\ The\ ammount\ to\ add\ to\ subtract\ from\ the\ balence\r\n
+numComments=6
