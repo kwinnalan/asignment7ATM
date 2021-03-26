@@ -1,5 +1,4 @@
 import java.util.Scanner;
-import java.util.HashMap;
 
 /**
  * The ATM class is the functionality for our ATM to work
@@ -9,25 +8,30 @@ import java.util.HashMap;
  */
 public class ATM
 {
+    private final Bank BANK;
     private final Account CHECKING;
     private final Account SAVINGS;
     private final Scanner KEYBOARD;
 
     private boolean cardTaken;
     private boolean cashDispensed;
+    private boolean envelopeDropped;
     
     /**
      * Constructor for objects of class ATM
      */
     public ATM() {
+        BANK = new Bank();
         KEYBOARD = new Scanner(System.in);
+        printWelcomeScreen();
         final String CARD_NUMBER = "1000500020006000";
+        System.out.println("Card Inserted...");
 
         cardTaken = false;
         signIn(CARD_NUMBER);
 
-        CHECKING = new Account("checking", getCheckStartBal(CARD_NUMBER));
-        SAVINGS = new Account("savings", getSaveStartBal(CARD_NUMBER));
+        CHECKING = new Account("checking", BANK.getCheckingBalance(CARD_NUMBER));
+        SAVINGS = new Account("savings", BANK.getSavingsBalance(CARD_NUMBER));
 
         switch(choose()){
             case 1:
@@ -58,6 +62,11 @@ public class ATM
 
     }
 
+    private void printWelcomeScreen() {
+        System.out.println("Welcome");
+        System.out.println("Please insert your card");
+    }
+
 
     /**
      * This method simulates a sign in by the user by checking their entered pin against the one in the bank database.
@@ -66,12 +75,6 @@ public class ATM
      */
     public void signIn( String cardNumber)
     {
-        HashMap<String, String> user = new HashMap<>();
-        user.put("1000500020006000", "1234");
-        user.put("1000300080007000", "1514");
-        user.put("1000900030004000", "1819");
-        user.put("1000200060007000", "1417");
-
         final int MAX_ALLOWED_ATTEMPTS = 3;
         int attempts = 0;
         boolean signedIn = false;
@@ -80,7 +83,7 @@ public class ATM
             System.out.println("Enter Pin (Simulation pin = 1234): ");
             String pin = KEYBOARD.nextLine();
             attempts++;
-            if(pin.equals(user.get(cardNumber))){
+            if(BANK.checkPin(cardNumber, pin)){
                 menu();
                 signedIn = true;
             }else{
@@ -93,41 +96,6 @@ public class ATM
             }
         }
 
-    }
-
-    /**
-     * This method simulates retrieving balance info from the bank database.
-     *
-     * @param cardNumber, the number associated with the inserted card
-     * @return starting Savings Balance, the starting balance for the account
-     */
-    public double getSaveStartBal(String cardNumber)
-    {
-        HashMap<String, Double> saveBal = new HashMap<>();
-
-        saveBal.put("1000500020006000", 120000.00);
-        saveBal.put("1000300080007000", 1587.32);
-        saveBal.put("1000900030004000", 25000.00);
-        saveBal.put("1000200060007000", 1000000000.00);
-
-        return saveBal.get(cardNumber);
-    }
-
-    /**
-     * This method simulates retrieving balance info from the bank database.
-     *
-     * @param cardNumber, the number associated with the inserted card
-     * @return starting Checking Balance from the bank, the starting balance for the account
-     */
-    public double getCheckStartBal(String cardNumber)
-    {
-        HashMap<String, Double> checkBal = new HashMap<>();
-        checkBal.put("1000500020006000", 3255.89);
-        checkBal.put("1000300080007000", 154.22);
-        checkBal.put("1000900030004000", 578.25);
-        checkBal.put("1000200060007000", 100121.69);
-
-        return checkBal.get(cardNumber);
     }
 
     /**
@@ -155,7 +123,7 @@ public class ATM
     public int choose()
     {
         int choice = 0;
-        while(choice < 1 || choice > 5){
+        while(choice < 1 || choice > 6){
             choice = Integer.parseInt(KEYBOARD.nextLine());
         }
 
@@ -172,8 +140,11 @@ public class ATM
         String choice = "notMade";
 
         while(! choice.toLowerCase().equals("checking")  && ! choice.toLowerCase().equals("savings")){
-            System.out.println("Enter the account you would like to " + fromOrTo + " (checking or savings): ");
+            System.out.println("Enter the account you would like to " + fromOrTo + " (checking or savings, E to exit): ");
             choice = KEYBOARD.nextLine();
+            if(choice.toLowerCase().equals("e")){
+                exit();
+            }
         }
         return choice;
     }
@@ -185,21 +156,30 @@ public class ATM
      */
     public double howMuch(boolean mustBeTwenties)
     {
+        String input;
         double choice = 0;
         if(!mustBeTwenties) {
-            System.out.println("Enter the amount: ");
-            choice = Double.parseDouble(KEYBOARD.nextLine());
+            System.out.println("Enter the amount (enter E to exit): ");
+            input = KEYBOARD.nextLine();
+            if(input.toLowerCase().equals("e")){
+                exit();
+            }
+            choice = Double.parseDouble(input);
         }else{
-            while(!isMultipleof20(choice)) {
-                System.out.println("Enter amount to withdraw (must be in increments of $20): ");
-                choice = Double.parseDouble(KEYBOARD.nextLine());
+            while(!isMultiple20(choice)) {
+                System.out.println("Enter amount to withdraw (must be in increments of $20, enter E to exit): ");
+                input = KEYBOARD.nextLine();
+                if(input.toLowerCase().equals("e")){
+                    exit();
+                }
+                choice = Double.parseDouble(input);
             }
         }
 
         return choice;
     }
 
-    public boolean isMultipleof20 (double n)
+    public boolean isMultiple20(double n)
     {
         while ( n > 0 ) {
             n = n - 20;
@@ -240,10 +220,14 @@ public class ATM
     public void deposit(String account, double amount)
     {
         System.out.println("Please place the envelope containing the proper value of either cash or check(s) in the drop box below...");
-        if(account.toLowerCase().equals(CHECKING.getTYPE())){
+        envelopeDropped = true;
+        if(account.toLowerCase().equals(CHECKING.getTYPE()) && envelopeDropped){
             CHECKING.deposit(amount);
-        }else {
+        }else if(envelopeDropped) {
             SAVINGS.deposit(amount);
+        }else{
+            System.out.println("You must drop the envelope before funds will be deposited. You will be redirected to the main menu. Please try again...");
+            menu();
         }
     }
     
@@ -283,13 +267,28 @@ public class ATM
      */
     public void exit() {
         if (cashDispensed) {
-            System.out.println("Your cash will be dispensed below...");
+                System.out.println("Your cash will be dispensed below...");
         }
         System.out.println("Thank you for using our ATM.");
-        if (!cardTaken) {
-            System.out.println("You may now remove you card.");
+        if (!anotherTransaction()) {
+            if (!cardTaken) {
+                System.out.println("You may now remove you card.");
+            }
+            System.out.println("Have A great day!");
+            System.exit(1);
         }
-        System.out.println("Have A great day!");
-        System.exit(1);
+    }
+
+    private Boolean anotherTransaction() {
+        String choice = "notMade";
+        System.out.println("Would you like to do another transaction? (enter yes or no)");
+        while(!choice.toLowerCase().equals("yes") && !choice.toLowerCase().equals("no")){
+            choice = KEYBOARD.nextLine();
+            if(choice.toLowerCase().equals("yes")){
+                menu();
+                return true;
+            }
+        }
+        return false;
     }
 }
