@@ -1,4 +1,8 @@
+
+import java.sql.Timestamp;
+import java.util.ArrayList;
 import java.util.Scanner;
+import java.util.Date;
 
 /**
  * The ATM class is the functionality for our ATM to work
@@ -13,6 +17,9 @@ public class ATM
     private final Account SAVINGS;
     private final Scanner KEYBOARD;
 
+    private final ArrayList<String> transactions;
+
+    boolean signedIn;
     private boolean cardTaken;
     private boolean cashDispensed;
     private boolean envelopeDropped;
@@ -27,41 +34,23 @@ public class ATM
         final String CARD_NUMBER = "1000500020006000";
         System.out.println("Card Inserted...");
 
+        signedIn = false;
         cardTaken = false;
         signIn(CARD_NUMBER);
 
         CHECKING = new Account("checking", BANK.getCheckingBalance(CARD_NUMBER));
         SAVINGS = new Account("savings", BANK.getSavingsBalance(CARD_NUMBER));
-
-        switch(choose()){
-            case 1:
-                withdraw(whatAccount("withdraw from"), howMuch(true));
-                cashDispensed = true;
-                exit();
-                break;
-            case 2:
-                deposit(whatAccount("deposit to"), howMuch(false));
-                exit();
-                break;
-            case 3:
-                transfer(whatAccount("transfer from"), howMuch(false));
-                exit();
-                break;
-            case 4:
-                checkBalance(whatAccount("check the balance of"));
-                exit();
-                break;
-            case 5:
-                exit();
-                break;
-            default:
-                System.out.println("You must enter a valid menu option...");
-                menu();
-                break;
+        transactions = new ArrayList<>();
+        transactions.add("Power On");
+        if(signedIn){
+            menu();
         }
-
     }
 
+    /**
+     * This method prints a welcome to the user and asks them to insert their card
+     *
+     */
     private void printWelcomeScreen() {
         System.out.println("Welcome");
         System.out.println("Please insert your card");
@@ -77,14 +66,12 @@ public class ATM
     {
         final int MAX_ALLOWED_ATTEMPTS = 3;
         int attempts = 0;
-        boolean signedIn = false;
 
         while(attempts < MAX_ALLOWED_ATTEMPTS && !signedIn) {
             System.out.println("Enter Pin (Simulation pin = 1234): ");
             String pin = KEYBOARD.nextLine();
             attempts++;
             if(BANK.checkPin(cardNumber, pin)){
-                menu();
                 signedIn = true;
             }else{
                 System.out.println("After three failed pin entry attempts, your card will be confiscated and you will need to contact your bank! " + "Failed attempts: " + attempts);
@@ -113,21 +100,45 @@ public class ATM
       System.out.println("Choose 5 for EXIT");
 
       System.out.print("Enter the number from the list of options: ");
+      choose();
     }
     
     /**
      * This method lets the user make a choice from the menu
      *
-     *@return the integer of the choice from the menu made by the user
      */
-    public int choose()
+    public void choose()
     {
         int choice = 0;
         while(choice < 1 || choice > 6){
             choice = Integer.parseInt(KEYBOARD.nextLine());
         }
-
-        return choice;
+        switch(choice){
+            case 1:
+                withdraw(whatAccount("withdraw from"), howMuch(true));
+                cashDispensed = true;
+                exit();
+                break;
+            case 2:
+                deposit(whatAccount("deposit to"), howMuch(false));
+                exit();
+                break;
+            case 3:
+                transfer(whatAccount("transfer from"), howMuch(false));
+                exit();
+                break;
+            case 4:
+                checkBalance(whatAccount("check the balance of"));
+                exit();
+                break;
+            case 5:
+                exit();
+                break;
+            default:
+                System.out.println("You must enter a valid menu option...");
+                menu();
+                break;
+        }
     }
     
     /**
@@ -179,6 +190,12 @@ public class ATM
         return choice;
     }
 
+    /**
+     * This method checks if a double is a multiple of twenty.
+     *
+     * @param n, the number to check
+     * @return boolean, true if n is a multiple of twenty
+     */
     public boolean isMultiple20(double n)
     {
         while ( n > 0 ) {
@@ -200,12 +217,14 @@ public class ATM
         if(account.toLowerCase().equals(CHECKING.getTYPE())){
             if(amount <= CHECKING.getBalance() && amount > 0){
                 CHECKING.withdraw(amount);
+                transactions.add("$" + amount + " Withdrawn from checking");
             }else{
                 System.out.println("You have insufficient funds!");
             }
         }else {
             if(amount <= SAVINGS.getBalance() && amount > 0){
                 SAVINGS.withdraw(amount);
+                transactions.add("$" + amount + " Withdrawn from savings");
             }else{
                 System.out.println("You have insufficient funds!");
             }
@@ -220,11 +239,13 @@ public class ATM
     public void deposit(String account, double amount)
     {
         System.out.println("Please place the envelope containing the proper value of either cash or check(s) in the drop box below...");
-        envelopeDropped = true;
+        envelopeDropped = BANK.envelopeDropped(true);
         if(account.toLowerCase().equals(CHECKING.getTYPE()) && envelopeDropped){
             CHECKING.deposit(amount);
+            transactions.add("$" + amount + " Deposited to checking");
         }else if(envelopeDropped) {
             SAVINGS.deposit(amount);
+            transactions.add("$" + amount + " Deposited to savings");
         }else{
             System.out.println("You must drop the envelope before funds will be deposited. You will be redirected to the main menu. Please try again...");
             menu();
@@ -267,7 +288,7 @@ public class ATM
      */
     public void exit() {
         if (cashDispensed) {
-                System.out.println("Your cash will be dispensed below...");
+                System.out.println("Don't forget your cash dispensed below...");
         }
         System.out.println("Thank you for using our ATM.");
         if (!anotherTransaction()) {
@@ -275,10 +296,37 @@ public class ATM
                 System.out.println("You may now remove you card.");
             }
             System.out.println("Have A great day!");
+            transactions.add("Power Off");
+            printReceipt();
             System.exit(1);
         }
     }
 
+    /**
+     * This method prints the receipt for the user
+     *
+     */
+    private void printReceipt() {
+        for(int i = 0; i < 25 ; i++){
+            System.out.println("\n");
+        }
+        Date date = new Date();
+        long timeMilli = date.getTime();
+        Timestamp timestamp = new Timestamp(timeMilli);
+        System.out.println(timestamp);
+        for(int i = 1; i < (transactions.size() - 1); i++){
+            System.out.println(transactions.get(i));
+        }
+        System.out.println("Checking Balance: " + "$" + CHECKING.getBalance());
+        System.out.println("Savings Balance: " + "$" + SAVINGS.getBalance());
+    }
+
+    /**
+     * This method asks the user if they would like another transaction
+     *
+     * @return boolean, true if the user chooses yes no if no
+     *
+     */
     private Boolean anotherTransaction() {
         String choice = "notMade";
         System.out.println("Would you like to do another transaction? (enter yes or no)");

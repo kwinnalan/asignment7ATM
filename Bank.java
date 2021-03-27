@@ -70,4 +70,18 @@ public class Bank
         }
         return false;
     }
+
+    /**
+     * This method simulates telling the bank that a envelope has been dropped
+     *
+     * @param  isDropped, Boolean weather or not the envelope has been dropped in the box
+     * @return  Boolean true if the money is deposited
+     */
+    public boolean envelopeDropped(boolean isDropped)
+    {
+        if(isDropped){
+            return true;
+        }
+        return false;
+    }
 }
