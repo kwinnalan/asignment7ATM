@@ -33,15 +33,13 @@ public class ATM
         printWelcomeScreen();
         final String CARD_NUMBER = "1000500020006000";
         System.out.println("Card Inserted...");
-
+        transactions = new ArrayList<>();
+        transactions.add("Power On");
         signedIn = false;
         cardTaken = false;
         signIn(CARD_NUMBER);
-
         CHECKING = new Account("checking", BANK.getCheckingBalance(CARD_NUMBER));
         SAVINGS = new Account("savings", BANK.getSavingsBalance(CARD_NUMBER));
-        transactions = new ArrayList<>();
-        transactions.add("Power On");
         if(signedIn){
             menu();
         }
@@ -297,7 +295,9 @@ public class ATM
             }
             System.out.println("Have A great day!");
             transactions.add("Power Off");
-            printReceipt();
+            if(!cardTaken) {
+                printReceipt();
+            }
             System.exit(1);
         }
     }
@@ -328,14 +328,16 @@ public class ATM
      *
      */
     private Boolean anotherTransaction() {
+        if(!cardTaken){
         String choice = "notMade";
         System.out.println("Would you like to do another transaction? (enter yes or no)");
-        while(!choice.toLowerCase().equals("yes") && !choice.toLowerCase().equals("no")){
+        while(!choice.toLowerCase().equals("yes") && !choice.toLowerCase().equals("no")) {
             choice = KEYBOARD.nextLine();
-            if(choice.toLowerCase().equals("yes")){
+            if (choice.toLowerCase().equals("yes")) {
                 menu();
                 return true;
             }
+        }
         }
         return false;
     }
