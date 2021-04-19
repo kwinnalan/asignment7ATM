@@ -1,5 +1,6 @@
 
 import java.sql.Timestamp;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Scanner;
 import java.util.Date;
@@ -16,6 +17,7 @@ public class ATM
     private final Account CHECKING;
     private final Account SAVINGS;
     private final Scanner KEYBOARD;
+    private final DecimalFormat DECIMAL_2;
 
     private final ArrayList<String> transactions;
 
@@ -23,6 +25,7 @@ public class ATM
     private boolean cardTaken;
     private boolean cashDispensed;
     private boolean envelopeDropped;
+
     
     /**
      * Constructor for objects of class ATM
@@ -30,6 +33,7 @@ public class ATM
     public ATM() {
         BANK = new Bank();
         KEYBOARD = new Scanner(System.in);
+        DECIMAL_2 = new DecimalFormat("#.##");
         printWelcomeScreen();
         final String CARD_NUMBER = "1000500020006000";
         System.out.println("Card Inserted...");
@@ -174,6 +178,8 @@ public class ATM
                 exit();
             }
             choice = Double.parseDouble(input);
+            String s = DECIMAL_2.format(choice);   // this is how I am rounding the input string to no more than two dec. place
+            choice = Double.parseDouble(s);         //String s is just a string placeholder really since DECIMAL_2.format() must take a String
         }else{
             while(!isMultiple20(choice)) {
                 System.out.println("Enter amount to withdraw (must be in increments of $20, enter E to exit): ");
@@ -274,9 +280,9 @@ public class ATM
     public void checkBalance(String account)
     {
         if(account.toLowerCase().equals(CHECKING.getTYPE())){
-            System.out.println("Your checking account balance is " + "$" + CHECKING.getBalance());
+            System.out.println("Your checking account balance is " + "$" + DECIMAL_2.format(CHECKING.getBalance()));
         }else{
-            System.out.println("Your savings account balance is " + "$" + SAVINGS.getBalance());
+            System.out.println("Your savings account balance is " + "$" + DECIMAL_2.format(SAVINGS.getBalance()));
         }
     }
     
@@ -317,8 +323,8 @@ public class ATM
         for(int i = 1; i < (transactions.size() - 1); i++){
             System.out.println(transactions.get(i));
         }
-        System.out.println("Checking Balance: " + "$" + CHECKING.getBalance());
-        System.out.println("Savings Balance: " + "$" + SAVINGS.getBalance());
+        System.out.println("Checking Balance: " + "$" + DECIMAL_2.format(CHECKING.getBalance()));
+        System.out.println("Savings Balance: " + "$" + DECIMAL_2.format(SAVINGS.getBalance()));
     }
 
     /**
